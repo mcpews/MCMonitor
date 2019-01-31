@@ -97,7 +97,7 @@ function findcb(uid){
 	    if(msg.header.messagePurpose=="commandResponse"){
 	    let callback=findcb(msg.header.responseId);
 	    if(callback!=null){
-		    callback[0]();
+		    callback[0](msg);
 		    callbacks[callback[1]]="died";
 	    }
 	    }
