@@ -31,7 +31,7 @@ console.log("MCMonitor is running, please connect Client to "+ localhost + ":" +
 console.log("Error when loading ws: %s.",errst.message);
 process.exit(1);
 }
-wss.on("connection" , function connection(ws, req) { 
+wss.on("connection" , function (ws, req) { 
     //客户端服务器连接时执行的代码块 
 	ws.send(JSON.stringify({
 		"body": {
@@ -91,6 +91,8 @@ function findcb(uid){
 
 	const ip = req.connection.remoteAddress;
 	console.log(ip +" connected.");
+	//TODO:Tell Torrekie how to use callback xD
+	//command("say",function(msg){console.log("Callback>>>>>> %s",msg});
 	command("tell @s §lMCMonitor connected!\nYour local IP is " + ip.replace("::ffff:",""));
     ws.on("message" , function (message) {
 		console.log(message);
