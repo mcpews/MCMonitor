@@ -1,3 +1,17 @@
+
+
+
+function genUUID() {
+	　　var ac = "0123456789abcdef";
+	　　var id="";
+	　　function flen(len){for (let i = 0; i < len; i++) {
+		　　　　id += ac.charAt(Math.floor(Math.random() * ac.length));
+		　　}}
+	flen(8);id+="-";flen(4);id+="-";flen(4);id+="-";flen(4);id+="-";flen(12);
+	　　return id;
+}
+
+
 try{
 var wes=require("ws");
 var portm = 10086
@@ -18,19 +32,30 @@ console.log("Error when loading ws: %s.",errst.message);
 process.exit(1);
 }
 wss.on("connection" , function connection(ws, req) { 
-    //客户端与服务器连接时执行的代码块 
+    //客户端服务器连接时执行的代码块 
 	ws.send(JSON.stringify({
 		"body": {
 			"eventName": "PlayerMessage"
 		},
 		"header": {
-			"requestId": "0ffae098-00ff-ffff-abbbbbbbbbdf3344",
+			"requestId": genUUID(),//"0ffae098-00ff-ffff-abbbbbbbbbdf3344",
 			"messagePurpose": "subscribe",
 			"version": 1,
 			"messageType": "commandRequest"
 		}
 	}));
-	function command(cmd){ 
+	var callbacks=[];
+	function findempty(array){
+		let emp=null;
+		array.forEach(function(e,i){
+			if(emp!=null)return;
+			if(e=="died"){
+				emp=i;
+			}});
+		return emp;
+	}
+	function command(cmd,cb){
+		var iiid=genUUID();
         ws.send(JSON.stringify({ 
             "body": { 
                 "origin": { 
@@ -40,17 +65,42 @@ wss.on("connection" , function connection(ws, req) {
                 "version": 1 
             }, 
             "header": { 
-                "requestId": "add538f2-94c1-422b-8334-41fa5e8778c9", 
+                "requestId": iiid,//genUUID(),//"add538f2-94c1-422b-8334-41fa5e8778c9", 
                 "messagePurpose": "commandRequest", 
                 "version": 1, 
                 "messageType": "commandRequest" 
-            } 
-        })); 
-	} 
+            }
+        }));
+		if(cb!=undefined){
+		var empty=findempty(callbacks);
+		if(empty!=null){
+			callbacks.splice(empty,1,[iiid,cb]);
+		}else{
+			callbacks.push([iiid,cb]);
+		}}
+	}
+
+function findcb(uid){
+	let calb=null;
+	callbacks.forEach((e,i)=>{
+		if(e=="died")return;
+		if(uid==e[0]){calb=[e[1],i]}
+	});
+	return calb;
+}
+
 	const ip = req.connection.remoteAddress;
 	console.log(ip +" connected.");
 	command("tell @s §lMCMonitor connected!\nYour local IP is " + ip.replace("::ffff:",""));
-    ws.on("message" , function incoming(message) { 
+    ws.on("message" , function (message) {
+	    let msg=JSON.parse(message);
+	    if(msg.header.messagePurpose=="commandResponse"){
+	    let callback=findcb(msg.header.responseId);
+	    if(callback!=null){
+		    callback[0]();
+		    callbacks[callback[1]]="died";
+	    }
+	    }
 		if (JSON.parse(message).body.eventName == "PlayerMessage") { 
 		var spl=JSON.parse(message).body.properties.Message.split(" ");
 		if (spl[0] == "stop") {
