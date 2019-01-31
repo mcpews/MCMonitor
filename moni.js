@@ -93,9 +93,10 @@ function findcb(uid){
 	console.log(ip +" connected.");
 	command("tell @s §lMCMonitor connected!\nYour local IP is " + ip.replace("::ffff:",""));
     ws.on("message" , function (message) {
+		console.log(message);
 	    let msg=JSON.parse(message);
 	    if(msg.header.messagePurpose=="commandResponse"){
-	    let callback=findcb(msg.header.responseId);
+	    let callback=findcb(msg.header.requestId);
 	    if(callback!=null){
 		    callback[0](msg);
 		    callbacks[callback[1]]="died";
